@@ -1,4 +1,5 @@
 import React from "react";
+import axios from "axios";
 import { Form, Icon, Input, Button, Select } from "antd";
 import { FormComponentProps } from "antd/lib/form";
 
@@ -12,7 +13,23 @@ export interface ICreateTenantFormProps extends FormComponentProps {
   access_token: string; // access token to create the tenant in the user context
 }
 
-class CreateTenantForm extends React.Component<ICreateTenantFormProps> {
+type CreateTenantFormState = {
+  error: boolean;
+  errorMessage: string;
+};
+
+class CreateTenantForm extends React.Component<
+  ICreateTenantFormProps,
+  CreateTenantFormState
+> {
+  constructor(props: ICreateTenantFormProps) {
+    super(props);
+    this.state = {
+      error: false,
+      errorMessage: ""
+    };
+  }
+
   handleSubmit = e => {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
@@ -22,6 +39,29 @@ class CreateTenantForm extends React.Component<ICreateTenantFormProps> {
             this.props.access_token
           }`
         );
+        axios
+          .post(
+            "https://backendapi.xxb/tenants",
+            {
+              tenantName: values.tenantname,
+              lastName: values.producttier
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${this.props.access_token}`
+              }
+            }
+          )
+          .then(function(response) {
+            console.log(response);
+          })
+          .catch(error => {
+            console.log(`${JSON.stringify(values)}`);
+            this.setState({
+              error: true,
+              errorMessage: "Tenant can't be created, please try later."
+            });
+          });
       }
     });
   };
@@ -43,7 +83,7 @@ class CreateTenantForm extends React.Component<ICreateTenantFormProps> {
           )}
         </Form.Item>
         <Form.Item hasFeedback>
-          {getFieldDecorator("select", {
+          {getFieldDecorator("producttier", {
             rules: [
               { required: true, message: "Please select your product tier!" }
             ]
@@ -63,6 +103,7 @@ class CreateTenantForm extends React.Component<ICreateTenantFormProps> {
             Create Tenant
           </Button>
         </Form.Item>
+        {this.state.errorMessage}
       </Form>
     );
   }
