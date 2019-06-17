@@ -45,7 +45,7 @@ resource "aws_dynamodb_table" "tenant-management" {
   hash_key     = "TenantId"
 
   attribute {
-    name = "TenantId"
+    name = "tenantId"
     type = "S"
   }
 }

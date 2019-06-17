@@ -37,6 +37,32 @@ resource "aws_iam_role" "create-tenant" {
 EOF
 }
 
+resource "aws_iam_policy" "write_db" {
+  name = "write_db_policy"
+  path = "/"
+  description = "My test policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "write_db_attach_to_create_tenant_policy" {
+  role       = "${aws_iam_role.create-tenant.name}"
+  policy_arn = "${aws_iam_policy.write_db.arn}"
+}
+
 output "aws_lambda_function_create-tenant_arn" {
   value = "${aws_lambda_function.create-tenant.arn}"
 }

@@ -31,6 +31,13 @@ if bucket_is_missing(bucket_name):
                      CreateBucketConfiguration={
                          'LocationConstraint': 'eu-central-1'})
 
+
+# add config to deployments
+# terraform output only works after the terraform apply command was run ! problem!
+# bash_command = "terraform output -json > config.json"
+# os.system(bash_command)
+# bash_command = 'xargs -n 1 cp -v ./config.json<<<"./ui/src ./create-tenant"'
+
 # package lambda
 file_name = 'example'
 version = 'v1.0.0c'
@@ -42,4 +49,3 @@ s3.Bucket(bucket_name).upload_file(
 
 bash_command = "terraform apply"
 os.system(bash_command)
-bash_command = "erraform output -json > ../ui/backend-config.json"
