@@ -7,7 +7,7 @@ provider "aws" {
 data "template_file" "openapi_spec" {
   template = "${file("${path.module}/openapi.yaml")}"
   vars = {
-    #consul_address = "${aws_instance.consul.private_ip}"
+    aws_lambda_function_create-tenant_arn = "${module.lambdas.aws_lambda_function_create-tenant_arn}"
   }
 }
 
@@ -52,4 +52,8 @@ resource "aws_dynamodb_table" "tenant-management" {
 
 output "base_url" {
   value = "${aws_api_gateway_deployment.tenant-management.invoke_url}"
+}
+
+output "tenant-management_db_name" {
+  value = "${aws_dynamodb_table.tenant-management.name}"
 }

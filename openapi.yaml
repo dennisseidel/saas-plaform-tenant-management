@@ -45,7 +45,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws_proxy
         httpMethod: POST
-        uri: 'arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:825465353745:function:create_tenant/invocations'
+        uri: 'arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/${aws_lambda_function_create-tenant_arn}/invocations'
   /tenants/{id}:
     get:
       operationId: getTenent

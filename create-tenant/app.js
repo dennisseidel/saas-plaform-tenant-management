@@ -28,8 +28,8 @@ exports.lambdaHandler = (event, context, callback) => {
         TableName: "tenants-21d863b",
         Item: {
             id: uuid.v1(),
+            tenantName: data.tenantName,
             plan: data.plan,
-            status: data.status,
             createdAt: Date.now()
         }
     };
