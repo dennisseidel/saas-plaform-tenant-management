@@ -2,7 +2,7 @@
   "base_url": {
     "sensitive": false,
     "type": "string",
-    "value": "https://id54q9vip2.execute-api.eu-central-1.amazonaws.com/dev"
+    "value": "https://zv546uirvh.execute-api.eu-central-1.amazonaws.com/dev"
   },
   "tenant-management_db_name": {
     "sensitive": false,

@@ -3,6 +3,8 @@ import axios from "axios";
 import { Form, Icon, Input, Button, Select } from "antd";
 import { FormComponentProps } from "antd/lib/form";
 
+import { base_url } from "../../config.json";
+
 const { Option } = Select;
 
 // https://ant.design/components/form/#Using-in-TypeScriptg
@@ -41,14 +43,14 @@ class CreateTenantForm extends React.Component<
         );
         axios
           .post(
-            "https://backendapi.xxb/tenants",
+            `${base_url.value}/tenants`,
             {
               tenantName: values.tenantname,
-              lastName: values.producttier
+              plan: values.producttier
             },
             {
               headers: {
-                Authorization: `Bearer ${this.props.access_token}`
+                //Authorization: `Bearer ${this.props.access_token}`
               }
             }
           )

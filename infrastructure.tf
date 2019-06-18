@@ -42,7 +42,7 @@ resource "aws_lambda_permission" "apigw" {
 resource "aws_dynamodb_table" "tenant-management" {
   name         = "TenantManagement"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "TenantId"
+  hash_key     = "tenantId"
 
   attribute {
     name = "tenantId"

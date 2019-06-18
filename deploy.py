@@ -47,5 +47,5 @@ shutil.make_archive(file_name, 'zip', dir_name)
 s3.Bucket(bucket_name).upload_file(
     Filename=f'{file_name}.zip', Key=f'{version}/{file_name}.zip')
 
-bash_command = "terraform apply"
+bash_command = "terraform init && terraform apply"
 os.system(bash_command)
