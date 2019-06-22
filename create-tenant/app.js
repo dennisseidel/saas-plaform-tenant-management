@@ -3,7 +3,9 @@
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
 
-const config = require('./config.json')
+const config = {
+    tenant_management_db_name: process.env.tenant_management_db_name
+}
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
@@ -26,7 +28,7 @@ exports.lambdaHandler = (event, context, callback) => {
 
     // insert data to the db
     const params = {
-        TableName: config['tenant-management_db_name']['value'],
+        TableName: config.tenant_management_db_name,
         Item: {
             tenantId: uuid.v1(),
             tenantName: data.tenantName,

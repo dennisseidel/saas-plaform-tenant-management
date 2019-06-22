@@ -40,3 +40,6 @@ override.tf.json
 !components/*/dist/
 # bit directories
 .bit
+
+# config files
+config.json

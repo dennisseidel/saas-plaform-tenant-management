@@ -13,6 +13,12 @@ resource "aws_lambda_function" "create-tenant" {
   runtime = "nodejs8.10"
 
   role = "${aws_iam_role.create-tenant.arn}"
+
+  environment {
+    variables = {
+      tenant_management_db_name = "${aws_dynamodb_table.tenant-management.name}"
+    }
+  }
 }
 
 # IAM role which dictates what other AWS services the Lambda function
@@ -65,4 +71,20 @@ resource "aws_iam_role_policy_attachment" "write_db_attach_to_create_tenant_poli
 
 output "aws_lambda_function_create-tenant_arn" {
   value = "${aws_lambda_function.create-tenant.arn}"
+}
+
+# db
+resource "aws_dynamodb_table" "tenant-management" {
+  name         = "TenantManagement"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "tenantId"
+
+  attribute {
+    name = "tenantId"
+    type = "S"
+  }
+}
+
+output "tenant-management_db_name" {
+  value = "${aws_dynamodb_table.tenant-management.name}"
 }

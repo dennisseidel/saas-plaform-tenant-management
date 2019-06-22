@@ -1,7 +1,13 @@
 provider "aws" {
-  access_key = "${var.AWS_ACCESS_KEY}"
-  secret_key = "${var.AWS_SECRET_KEY}"
-  region     = "${var.AWS_REGION}"
+  region = "${var.AWS_REGION}"
+}
+
+terraform {
+  backend "s3" {
+    bucket = "saas-platform-terraform-state"
+    key    = "tenant-management/terraform.tfstate"
+    region = "eu-central-1"
+  }
 }
 
 data "template_file" "openapi_spec" {
@@ -38,22 +44,6 @@ resource "aws_lambda_permission" "apigw" {
   source_arn = "${aws_api_gateway_deployment.tenant-management.execution_arn}/*/*"
 }
 
-# db
-resource "aws_dynamodb_table" "tenant-management" {
-  name         = "TenantManagement"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "tenantId"
-
-  attribute {
-    name = "tenantId"
-    type = "S"
-  }
-}
-
 output "base_url" {
   value = "${aws_api_gateway_deployment.tenant-management.invoke_url}"
-}
-
-output "tenant-management_db_name" {
-  value = "${aws_dynamodb_table.tenant-management.name}"
 }
