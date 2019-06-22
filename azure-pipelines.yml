@@ -22,33 +22,32 @@ steps:
   inputs:
     versionSpec: '8.x'
   displayName: 'Install Node.js'
-
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.6'
+    architecture: 'x64'
 - script: |
-    echo "setup credentials & dependencies"
-  displayName: 'setup credentials & dependencies'
-
-- script: |
-    cd terraform
+    cd ./scripts && pip install -r requirements.txt && python deploy.py -c service 
   env:
-      PULUMI_ACCESS_TOKEN: $(pulumi.access.token)
-      AWS_ACCESS_KEY_ID: $(aws.master.accesskey)
-      AWS_SECRET_ACCESS_KEY: $(aws.master.accesssecret)
-  displayName: 'build'
-
+      AWS_ACCESS_KEY_ID: $(aws.accesskey)
+      AWS_SECRET_ACCESS_KEY: $(aws.accesssecret)
+  displayName: 'build service'
 - script: |
-    cd frontend
-    npm run e2e
-  displayName: 'run test'
-
-- script: |
-    # setup preview environment & artifact bucket & upload to artifiact bucket
-    export PATH=$PATH:$HOME/.pulumi/bin
-    cd devops/frontend-preview
-    #npm install
-    pulumi stack select denseidel/saas-template-frontend/dev
-    pulumi up -y
+    cd ./scripts && python deploy.py -c infrastucture -ni True
   env:
-      PULUMI_ACCESS_TOKEN: $(pulumi.access.token)
-      AWS_ACCESS_KEY_ID: $(aws.master.accesskey)
-      AWS_SECRET_ACCESS_KEY: $(aws.master.accesssecret)
-  displayName: 'Setup Infrastucture & Deploy to preview environment'
+      AWS_ACCESS_KEY_ID: $(aws.accesskey)
+      AWS_SECRET_ACCESS_KEY: $(aws.accesssecret)
+  displayName: 'deploy infrastructure'
+
+- script: |
+    cd ui
+    echo "@bit:registry=https://node.bit.dev" >> ~/.npmrc
+    echo //node.bitsrc.io/:_authToken={$BIT_NODE_TOKEN} >> ~/.npmrc
+    echo "//node.bit.dev/:_authToken={$BIT_NODE_TOKEN}" >> ~/.npmrc
+    bit build 
+    bit tag --all 0.0.2
+    bit login
+    bit export denseidel.saas-platform
+  env:
+    BIT_NODE_TOKEN: $(bit.nodetoken)
+  displayName: 'build and release ui'
