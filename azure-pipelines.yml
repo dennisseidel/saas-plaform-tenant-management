@@ -41,14 +41,14 @@ steps:
 
 - script: |
     cd ui
-    yes | npm install bit-bin -g
+    #npm install bit-bin -g
     echo "@bit:registry=https://node.bit.dev" >> ~/.npmrc
     echo //node.bitsrc.io/:_authToken={$BIT_NODE_TOKEN} >> ~/.npmrc
     echo "//node.bit.dev/:_authToken={$BIT_NODE_TOKEN}" >> ~/.npmrc
-    bit build 
-    bit tag --all 0.0.2
-    bit login
-    bit export denseidel.saas-platform
+    #bit build 
+    #bit tag --all 0.0.2
+    #bit login
+    #bit export denseidel.saas-platform
   env:
     BIT_NODE_TOKEN: $(bit.nodetoken)
   displayName: 'build and release ui'
