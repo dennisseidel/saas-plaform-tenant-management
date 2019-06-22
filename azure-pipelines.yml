@@ -41,7 +41,7 @@ steps:
 
 - script: |
     cd ui
-    npm install bit-bin -g
+    yes | npm install bit-bin -g
     echo "@bit:registry=https://node.bit.dev" >> ~/.npmrc
     echo //node.bitsrc.io/:_authToken={$BIT_NODE_TOKEN} >> ~/.npmrc
     echo "//node.bit.dev/:_authToken={$BIT_NODE_TOKEN}" >> ~/.npmrc
