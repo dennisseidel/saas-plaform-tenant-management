@@ -44,7 +44,9 @@
     "react-docgen-typescript-webpack-plugin": "^1.1.0"
   },
   "bit": {
-    "env": {},
+    "env": {
+      "compiler": "bit.envs/compilers/react-typescript@3.0.6"
+    },
     "componentsDefaultDirectory": "components/{name}",
     "packageManager": "npm"
   }
