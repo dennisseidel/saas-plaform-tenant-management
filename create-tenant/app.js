@@ -2,12 +2,25 @@
 // const url = 'http://checkip.amazonaws.com/';
 const AWS = require('aws-sdk');
 const uuid = require('uuid');
+const jwtDecode = require('jwt-decode');
 
 const config = {
     tenant_management_db_name: process.env.tenant_management_db_name
 }
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
+
+const getSub = (event) => {
+    let sub = '';
+    const AuthorizationHeader = event.headers.Authorization;
+    if (AuthorizationHeader) {
+        bearerToken = AuthorizationHeader.substring(AuthorizationHeader.indexOf(' ') + 1);
+        var decodedAccessToken = jwtDecode(bearerToken);
+        if (decodedAccessToken)
+            sub = decodedAccessToken['sub'];
+    }
+    return sub;
+} 
 
 /**
  *
@@ -25,7 +38,7 @@ exports.lambdaHandler = (event, context, callback) => {
     // Request body is passed in as a JSON encoded string in 'event.body'
     const data = JSON.parse(event.body);
     // get the tenant ids and permissions of the caller from his access token through introspection
-
+    const requestorSub = getSub(event)
     // insert data to the db
     const params = {
         TableName: config.tenant_management_db_name,
@@ -33,7 +46,7 @@ exports.lambdaHandler = (event, context, callback) => {
             tenantId: uuid.v1(),
             tenantName: data.tenantName,
             plan: data.plan,
-            userId: 'from-token', 
+            userId: requestorSub, 
             role: 'tenant-admin',
             createdAt: Date.now()
         }

@@ -23,6 +23,9 @@ paths:
     post:
       operationId: createTenent
       summary: Create a tenant.
+      security:
+        - openId:
+          - tenant-management.write
       description: "This takes the name, role, product group, (optional) tenantId of a person and updates this given the caller identified by the _access_token_ has the rights to either register this for himself or is admin of the tenantId provided."
       requestBody:
         description: "Description of a tenant entry"
@@ -84,6 +87,9 @@ paths:
     get:
       operationId: getTenent
       summary: Get the tenant data for a tenentId
+      security:
+        - openId:
+          - tenant-management.read
       parameters: 
         - in: path
           name: id
@@ -98,6 +104,10 @@ paths:
         type: mock
           
 components:
+  securitySchemes:
+    openId:   # <--- Arbitrary name for the security scheme. Used to refer to it from elsewhere.
+      type: openIdConnect
+      openIdConnectUrl: https://cognito-idp.${region}.amazonaws.com/${user_pool_id}/.well-known/openid-configuration
   schemas:
     Tenant:
       type: object

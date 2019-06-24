@@ -54,7 +54,7 @@ if args.component == "service":
                              'LocationConstraint': 'eu-central-1'})
     # package lambda
     file_name = 'example'
-    version = 'v1.0.0c'
+    version = 'v1.0.1'
     dir_name = "../create-tenant"
     shutil.make_archive(file_name, 'zip', dir_name)
     # upload to s3

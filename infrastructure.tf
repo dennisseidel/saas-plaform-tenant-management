@@ -14,6 +14,8 @@ data "template_file" "openapi_spec" {
   template = "${file("${path.module}/openapi.yaml")}"
   vars = {
     aws_lambda_function_create-tenant_arn = "${module.lambdas.aws_lambda_function_create-tenant_arn}"
+    region                                = "${var.AWS_REGION}"
+    user_pool_id                          = "eu-central-1_TtI4cGag5"
   }
 }
 
