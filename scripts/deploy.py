@@ -43,6 +43,9 @@ if args.component == "infrastructure":
         os.system(bash_command)
         bash_command = f'cd {path_to_infrastructure} && terraform output --json > config.json'
         os.system(bash_command)
+    if args.action == 'destroy':
+        bash_command = f'cd {path_to_infrastructure} && terraform destroy {noninteractive}'
+        os.system(bash_command)
 
 if args.component == "service":
     # create bucket
