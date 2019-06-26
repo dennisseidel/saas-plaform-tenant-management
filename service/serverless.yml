@@ -25,8 +25,8 @@ provider:
 functions:
   create_tenant:
     handler: handler.createTenant
-    
     events:
       - http:
           method: post
           path: tenants
+          cors: true
