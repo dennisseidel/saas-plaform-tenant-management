@@ -1,5 +1,5 @@
 service:
-  name: aws-nodejs-typescript
+  name: tenant-management
 #app: your-app-name
 #tenant: your-tenant-name
 
@@ -9,12 +9,15 @@ plugins:
 
 provider:
   name: aws
+  region: eu-central-1
   runtime: nodejs10.x
 
 functions:
-  hello:
-    handler: handler.hello
+  create_tenant:
+    handler: handler.createTenant
+    environment:
+      tenant_management_db_name: TenantManagement
     events:
       - http:
-          method: get
-          path: hello
+          method: post
+          path: tenants

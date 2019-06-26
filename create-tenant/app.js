@@ -1,26 +1,6 @@
 // const axios = require('axios')
 // const url = 'http://checkip.amazonaws.com/';
-const AWS = require('aws-sdk');
-const uuid = require('uuid');
-const jwtDecode = require('jwt-decode');
 
-const config = {
-    tenant_management_db_name: process.env.tenant_management_db_name
-}
-
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
-
-const getSub = (event) => {
-    let sub = '';
-    const AuthorizationHeader = event.headers.Authorization;
-    if (AuthorizationHeader) {
-        bearerToken = AuthorizationHeader.substring(AuthorizationHeader.indexOf(' ') + 1);
-        var decodedAccessToken = jwtDecode(bearerToken);
-        if (decodedAccessToken)
-            sub = decodedAccessToken['sub'];
-    }
-    return sub;
-} 
 
 /**
  *
@@ -81,3 +61,23 @@ exports.lambdaHandler = (event, context, callback) => {
         return;
     });
 };
+
+
+
+(params, (error, result) => {
+    // Set response headers to enable CORS (Cross-Origin Resource Sharing)
+    ;
+    if (error) {
+      return {
+        statusCode: 500,
+        headers: headers,
+        body: JSON.stringify({ status: false })
+      }
+    }
+
+    return {
+      statusCode: 500,
+      headers: headers,
+      body: JSON.stringify({ status: false })
+    }
+  }
