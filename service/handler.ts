@@ -43,21 +43,19 @@ export const createTenant: APIGatewayProxyHandler = async (event, _context) => {
     }
   }
   try {
-    let putPromise = dynamoDb.put(params).promise();
-    putPromise.then((data) => {
-      console.log(data)
-      return {
-        statusCode: 200,
-        headers: headers,
-        body: JSON.stringify({ params, data })
-      }
-    })
-    //const data = await dynamoDb.put(params).promise();
-  } catch (error) {
+    await dynamoDb.put(params).promise();
+    return {
+      statusCode: 200,
+      headers: headers,
+      body: JSON.stringify(params.Item)
+    }
+  }
+  catch (error) {
+    console.log(error)
     return {
       statusCode: 500,
       headers: headers,
-      body: `Could not post: ${error.stack}`
+      body: JSON.stringify({ "status": false })
     };
   }
 }
