@@ -11,12 +11,21 @@ provider:
   name: aws
   region: eu-central-1
   runtime: nodejs10.x
+  #logRetentionInDays: 7
+  environment:
+    tenant_management_db_name: ${file(../infrastructure/config.json):tenant-management_db_name}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource: 
+        - ${file(../infrastructure/config.json):tenant-management_db_arn}
+        #- "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${ssm:/${self:service}-${opt:stage, 'dev'}/db}"
 
 functions:
   create_tenant:
     handler: handler.createTenant
-    environment:
-      tenant_management_db_name: TenantManagement
+    
     events:
       - http:
           method: post

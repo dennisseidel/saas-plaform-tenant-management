@@ -25,14 +25,15 @@ def bucket_is_missing(bucket_name):
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-a", "--action", help="Specify yor action either: deploy or destroy", default="deploy")
+    "-a", "--action", help="Specify yor action either: build, deploy or destroy", default="deploy")
 parser.add_argument("-ni", "--noninteractive", type=bool,
                     help="Auto approve the command.", default=False)
 parser.add_argument("-c", "--component",
-                    help="Specify which component to deploy/destroy: infrastructure, service", default="infrastructure")
+                    help="Specify which component to build/deploy/destroy: infrastructure, service", default="infrastructure")
 args = parser.parse_args()
 
-path_to_infrastructure = '../'
+path_to_infrastructure = '../infrastructure'
+path_to_service = '../service'
 noninteractive = ''
 if args.noninteractive:
     noninteractive = '-auto-approve'
@@ -41,25 +42,16 @@ if args.component == "infrastructure":
     if args.action == 'deploy':
         bash_command = f'cd {path_to_infrastructure} && terraform init && terraform apply {noninteractive}'
         os.system(bash_command)
-        bash_command = f'cd {path_to_infrastructure} && terraform output --json > config.json'
+        bash_command = f"cd {path_to_infrastructure} && terraform output -json | jq 'with_entries(.value |= .value)' > config.json"
         os.system(bash_command)
     if args.action == 'destroy':
         bash_command = f'cd {path_to_infrastructure} && terraform destroy {noninteractive}'
         os.system(bash_command)
 
 if args.component == "service":
-    # create bucket
-    bucket_name = "saas-platform-lambda-repository"
-    s3 = boto3.resource('s3')
-    if bucket_is_missing(bucket_name):
-        s3.create_bucket(Bucket=bucket_name,
-                         CreateBucketConfiguration={
-                             'LocationConstraint': 'eu-central-1'})
-    # package lambda
-    file_name = 'example'
-    version = 'v1.0.1'
-    dir_name = "../create-tenant"
-    shutil.make_archive(file_name, 'zip', dir_name)
-    # upload to s3
-    s3.Bucket(bucket_name).upload_file(
-        Filename=f'{file_name}.zip', Key=f'{version}/{file_name}.zip')
+    if args.action == 'deploy':
+        bash_command = f'cd {path_to_service} && sls deploy -v'
+        os.system(bash_command)
+    if args.action == 'destroy':
+        bash_command = f'cd {path_to_service} && sls remove'
+        os.system(bash_command)
