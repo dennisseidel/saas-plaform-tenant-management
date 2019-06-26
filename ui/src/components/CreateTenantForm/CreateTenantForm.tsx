@@ -50,7 +50,7 @@ class CreateTenantForm extends React.Component<
             },
             {
               headers: {
-                //Authorization: `Bearer ${this.props.access_token}`
+                Authorization: `Bearer ${this.props.access_token}`
               }
             }
           )
