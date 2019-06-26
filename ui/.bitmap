@@ -13,7 +13,7 @@
         "origin": "AUTHORED",
         "exported": true
     },
-    "denseidel.saas-platform/create-tenant-form@0.0.3": {
+    "denseidel.saas-platform/create-tenant-form@0.0.4": {
         "files": [
             {
                 "relativePath": "src/components/CreateTenantForm/CreateTenantForm.tsx",
