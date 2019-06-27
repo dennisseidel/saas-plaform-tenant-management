@@ -10,14 +10,6 @@ info:
     url: https://github.com/denseidel/saas-platform-template/tree/master/services/tenent-management
 servers: 
   - url: "/"
-x-amazon-apigateway-request-validators:
-  all:
-    validateRequestBody: true
-    validateRequestParameters: true
-  params-only:
-    validateRequestBody: false
-    validateRequestParameters: true
-x-amazon-apigateway-request-validator: "all"
 paths:
   /tenants:
     post:
@@ -45,64 +37,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Tenant'
-      x-amazon-apigateway-integration:
-        type: aws_proxy
-        httpMethod: POST
-        uri: 'arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/${aws_lambda_function_create-tenant_arn}/invocations'
-    options:
-      summary: CORS support
-      description: |
-        Enable CORS by returning correct headers
-      responses:
-        200:
-          description: Default response for CORS method
-          headers:
-            Access-Control-Allow-Headers:
-              schema:
-                type: string
-            Access-Control-Allow-Methods:
-              schema:
-                type: string
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
-      x-amazon-apigateway-integration:
-        type: mock
-        requestTemplates:
-          application/json: |
-            {
-              "statusCode" : 200
-            }
-        responses:
-          "default":
-            statusCode: "200"
-            responseParameters:
-              method.response.header.Access-Control-Allow-Headers : "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-              method.response.header.Access-Control-Allow-Methods : "'*'"
-              method.response.header.Access-Control-Allow-Origin : "'*'"
-            responseTemplates:
-              application/json: |
-                {}
-  /tenants/{id}:
     get:
-      operationId: getTenent
-      summary: Get the tenant data for a tenentId
+      operationId: getTenant
+      summary: Get the saas platform tenants.
       security:
         - openId:
           - tenant-management.read
-      parameters: 
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: numeric id of the tenant
       responses:
         '200':
           description: OK
-      x-amazon-apigateway-integration:
-        type: mock
-          
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  tenants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tenant'
 components:
   securitySchemes:
     openId:   # <--- Arbitrary name for the security scheme. Used to refer to it from elsewhere.
@@ -118,17 +70,12 @@ components:
           type: string
         plan:
           type: string
-        users:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              role:
-                type: string
+        userId:
+          type: string
+        role:
+          type: string
+        createdAt:
+          type: string
       required: 
-        - users
         - plan
-        - tenentId
         - tenantName
