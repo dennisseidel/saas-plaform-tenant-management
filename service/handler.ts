@@ -3,7 +3,6 @@ import 'source-map-support/register';
 import { DynamoDB } from 'aws-sdk';
 import { v1 } from 'uuid';
 import * as jwtDecode from 'jwt-decode';
-import axios from 'axios';
 
 const config = {
   tenant_management_db_name: process.env.tenant_management_db_name
@@ -31,6 +30,7 @@ async function authorize(event) {
     //     Authorization: `Bearer ${event.headers.Authorization}`
     //   }
     // })
+    event.headers
     return true
   } catch {
     return false
@@ -82,4 +82,48 @@ export const createTenant: APIGatewayProxyHandler = async (event, _context) => {
       body: JSON.stringify({ "status": false })
     };
   }
+}
+
+export const getTenant: APIGatewayProxyHandler = async (event, _context) => {
+  const authorizationHeader = event.headers.Authorization;
+  const responseHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Credentials": true
+  }
+
+  const authorized = await authorize(event);
+  if (!authorized) {
+    return {
+      statusCode: 401,
+      headers: responseHeaders,
+      body: ''
+    }
+  }
+
+  const sub = getSub(authorizationHeader)
+  var params = {
+    TableName: config.tenant_management_db_name,
+    KeyConditionExpression: "userId = :userId",
+    ExpressionAttributeValues: {
+      ":userId": sub
+    }
+  };
+  try {
+    const tenants = await dynamoDb.query(params).promise()
+    return {
+      statusCode: 200,
+      headers: responseHeaders,
+      body: JSON.stringify({ tenants: tenants.Items })
+    }
+  }
+  catch (error) {
+    console.log(error)
+    return {
+      statusCode: 500,
+      headers: responseHeaders,
+      body: JSON.stringify({ "status": false })
+    };
+  }
+
+
 }

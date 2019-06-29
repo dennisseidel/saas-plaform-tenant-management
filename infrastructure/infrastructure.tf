@@ -23,10 +23,16 @@ locals {
 resource "aws_dynamodb_table" "tenant-management" {
   name         = "TenantManagement"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "tenantId"
+  hash_key     = "userId"
+  range_key    = "tenantId"
 
   attribute {
     name = "tenantId"
+    type = "S"
+  }
+
+  attribute {
+    name = "userId"
     type = "S"
   }
 }
