@@ -25,5 +25,29 @@
         "origin": "AUTHORED",
         "exported": true
     },
+    "denseidel.saas-platform/tenant-overview-table@0.0.3": {
+        "files": [
+            {
+                "relativePath": "src/components/TenantOverviewTable/TenantOverviewTable.tsx",
+                "test": false,
+                "name": "TenantOverviewTable.tsx"
+            }
+        ],
+        "mainFile": "src/components/TenantOverviewTable/TenantOverviewTable.tsx",
+        "origin": "AUTHORED",
+        "exported": true
+    },
+    "denseidel.saas-platform/tenant-overview-tablestories@0.0.3": {
+        "files": [
+            {
+                "relativePath": "src/components/TenantOverviewTable/TenantOverviewTable.stories.tsx",
+                "test": false,
+                "name": "TenantOverviewTable.stories.tsx"
+            }
+        ],
+        "mainFile": "src/components/TenantOverviewTable/TenantOverviewTable.stories.tsx",
+        "origin": "AUTHORED",
+        "exported": true
+    },
     "version": "14.1.3"
 }

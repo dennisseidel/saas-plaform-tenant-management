@@ -1,129 +1,66 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import 'source-map-support/register';
-import { DynamoDB } from 'aws-sdk';
 import { v1 } from 'uuid';
-import * as jwtDecode from 'jwt-decode';
-
-const config = {
-  tenant_management_db_name: process.env.tenant_management_db_name
-}
-
-const dynamoDb = new DynamoDB.DocumentClient();
-
-const getSub = (authorizationHeader) => {
-  let sub = '';
-  if (authorizationHeader) {
-    const bearerToken = authorizationHeader.substring(authorizationHeader.indexOf(' ') + 1);
-    const decodedAccessToken = jwtDecode(bearerToken);
-    if (decodedAccessToken)
-      sub = decodedAccessToken['sub'];
-  }
-  return sub;
-}
-
-
-async function authorize(event) {
-  // it is the first entry point into the system validate online against cognito that token is valid / non expired and sub is correct
-  try {
-    // const res = await axios.get('https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_TtI4cGag5/userInfo', {
-    //   headers: {
-    //     Authorization: `Bearer ${event.headers.Authorization}`
-    //   }
-    // })
-    event.headers
-    return true
-  } catch {
-    return false
-  }
-}
-
+import { getSub, authorize } from './domain/lib'
+import { Tenant } from './domain/tenant';
+import { TenantDb } from './instrastructure/tentantDb'
+import { httpResponse } from './domain/lib'
 
 export const createTenant: APIGatewayProxyHandler = async (event, _context) => {
-  const { plan, tenantName }: { plan: string, tenantName: string } = JSON.parse(event.body)
-  const authorizationHeader = event.headers.Authorization;
-  const responseHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Credentials": true
-  }
-
-  const authorized = await authorize(event);
-  if (!authorized) {
-    return {
-      statusCode: 401,
-      headers: responseHeaders,
-      body: ''
-    }
-  }
-  const sub = getSub(authorizationHeader)
-  const params = {
-    TableName: config.tenant_management_db_name,
-    Item: {
-      tenantId: v1(),
-      tenantName: tenantName,
-      plan: plan,
-      userId: sub,
-      role: 'tenant-admin',
-      createdAt: Date.now()
-    }
-  }
   try {
-    await dynamoDb.put(params).promise();
-    return {
-      statusCode: 200,
-      headers: responseHeaders,
-      body: JSON.stringify(params.Item)
+    const { plan, tenantName }: { plan: string, tenantName: string } = JSON.parse(event.body)
+    const authorizationHeader = event.headers.Authorization;
+    const authorized = await authorize(event);
+    if (!authorized) {
+      return httpResponse(401)
     }
+    const sub = getSub(authorizationHeader)
+    const tenantId = v1()
+    const tenant = new Tenant(plan, tenantName, tenantId, sub, 'tenant-admin')
+    const tenantDb = new TenantDb();
+    const res = await tenantDb.createTenant(tenant);
+    return httpResponse(200, res);
   }
   catch (error) {
     console.log(error)
-    return {
-      statusCode: 500,
-      headers: responseHeaders,
-      body: JSON.stringify({ "status": false })
-    };
+    return httpResponse(500)
   }
 }
 
 export const getTenant: APIGatewayProxyHandler = async (event, _context) => {
   const authorizationHeader = event.headers.Authorization;
-  const responseHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Credentials": true
-  }
-
   const authorized = await authorize(event);
   if (!authorized) {
-    return {
-      statusCode: 401,
-      headers: responseHeaders,
-      body: ''
-    }
+    return httpResponse(401)
   }
-
-  const sub = getSub(authorizationHeader)
-  var params = {
-    TableName: config.tenant_management_db_name,
-    KeyConditionExpression: "userId = :userId",
-    ExpressionAttributeValues: {
-      ":userId": sub
-    }
-  };
   try {
-    const tenants = await dynamoDb.query(params).promise()
-    return {
-      statusCode: 200,
-      headers: responseHeaders,
-      body: JSON.stringify({ tenants: tenants.Items })
-    }
+    const sub = getSub(authorizationHeader)
+    const tenantDb = new TenantDb()
+    const tenants = await tenantDb.getTenantByUserId(sub)
+    return httpResponse(200, { tenants: tenants })
   }
   catch (error) {
     console.log(error)
-    return {
-      statusCode: 500,
-      headers: responseHeaders,
-      body: JSON.stringify({ "status": false })
-    };
-  }
+    return httpResponse(500)
+  };
+}
 
+export const deleteTenant: APIGatewayProxyHandler = async (event, _context) => {
+  const authorizationHeader = event.headers.Authorization;
+  const authorized = await authorize(event);
+  if (!authorized) {
+    return httpResponse(401)
+  }
+  try {
+    const tenantId = event.pathParameters.id
+    const sub = getSub(authorizationHeader)
+    const tenantDb = new TenantDb()
+    tenantDb.deleteTenantByTenantId(tenantId, sub)
+    return httpResponse(200)
+  } catch (error) {
+    console.log(error)
+    return httpResponse(500)
+
+  }
 
 }

@@ -54,6 +54,7 @@ class InfiniteListExample extends React.Component<
       }
     });
     console.log(res);
+
     this.setState({
       data: res.data.tenants
     });
