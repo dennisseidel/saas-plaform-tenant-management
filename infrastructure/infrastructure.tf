@@ -18,37 +18,31 @@ locals {
   service_stage = "dev"
 }
 
-
-# db
-resource "aws_dynamodb_table" "tenant-management" {
-  name         = "TenantManagement"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "userId"
-  range_key    = "tenantId"
-
-  attribute {
-    name = "tenantId"
-    type = "S"
-  }
-
-  attribute {
-    name = "userId"
-    type = "S"
-  }
+# add default subnets to rds private subnet group
+resource "aws_db_subnet_group" "rds-private-subnet" {
+  name       = "rds-private-subnet-group"
+  subnet_ids = "${var.rds_subnets}"
 }
 
-resource "aws_ssm_parameter" "tenant-management-db" {
-  name  = "/${local.service_name}-${local.service_stage}/db"
-  type  = "String"
-  value = "${aws_dynamodb_table.tenant-management.name}"
-}
-
-output "tenant-management_db_name" {
-  value = "${aws_dynamodb_table.tenant-management.name}"
+resource "aws_rds_cluster" "tenant-management" {
+  engine_mode          = "serverless"
+  master_password      = "${var.mysql_password}"
+  master_username      = "${var.mysql_username}"
+  cluster_identifier   = "tenant-management"
+  skip_final_snapshot  = true
+  db_subnet_group_name = "${aws_db_subnet_group.rds-private-subnet.name}"
+  scaling_configuration {
+    auto_pause               = true
+    max_capacity             = 1
+    min_capacity             = 1
+    seconds_until_auto_pause = 300
+  }
 }
 
 output "tenant-management_db_arn" {
-  value = "${aws_dynamodb_table.tenant-management.arn}"
+  value = "${aws_rds_cluster.tenant-management.arn}"
 }
 
-
+output "tenant-management_rds_secret_arn" {
+  value = "${var.rds_secret_arn}"
+}

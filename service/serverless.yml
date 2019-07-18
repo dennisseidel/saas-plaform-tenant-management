@@ -9,21 +9,23 @@ plugins:
 
 provider:
   name: aws
-  region: eu-central-1
+  region: us-east-1
   runtime: nodejs10.x
   #logRetentionInDays: 7
   environment:
-    tenant_management_db_name: ${file(../infrastructure/config.json):tenant-management_db_name}
+    tenant-management_db_arn: ${file(../infrastructure/config.json):tenant-management_db_arn}
+    tenant-management_rds_secret_arn: ${file(../infrastructure/config.json):tenant-management_rds_secret_arn)}
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - dynamodb:PutItem
-        - dynamodb:Query
-        - dynamodb:DeleteItem
+        - secretsmanager:GetSecretValue
       Resource: 
-        - ${file(../infrastructure/config.json):tenant-management_db_arn}
-        #- "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${ssm:/${self:service}-${opt:stage, 'dev'}/db}"
-
+        - ${file(../infrastructure/config.json):tenant-management_rds_secret_arn}
+    - Effect: Allow
+      Action:
+        - rds-data:ExecuteStatement
+      Resource:
+        - ${file(../infrastructure/config.json):tenant-management_db_arn)}
 functions:
   create_tenant:
     handler: handler.createTenant
