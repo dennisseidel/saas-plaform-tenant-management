@@ -2,6 +2,8 @@ import { List, message, Avatar, Spin, Tag } from "antd";
 import axios from "axios";
 import React from "react";
 
+import config from "../../config.json";
+
 interface ITenantOverviewProps {
   children?: React.ReactChild;
   access_token: string;
@@ -22,8 +24,7 @@ type tenant = {
   role: string;
 };
 
-const tenantDataUrl =
-  "https://2wifthija8.execute-api.eu-central-1.amazonaws.com/dev/tenants";
+const tenantDataUrl = config.tenant_management_endpoint;
 
 class InfiniteListExample extends React.Component<
   ITenantOverviewProps,
