@@ -13,8 +13,8 @@ provider:
   runtime: nodejs10.x
   #logRetentionInDays: 7
   environment:
-    tenant-management_db_arn: ${file(../infrastructure/config.json):tenant-management_db_arn}
-    tenant-management_rds_secret_arn: ${file(../infrastructure/config.json):tenant-management_rds_secret_arn)}
+    tenant_management_db_arn: ${file(../infrastructure/config.json):tenant-management_db_arn}
+    tenant_management_rds_secret_arn: ${file(../infrastructure/config.json):tenant-management_rds_secret_arn}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -24,8 +24,12 @@ provider:
     - Effect: Allow
       Action:
         - rds-data:ExecuteStatement
+        - rds-data:BatchExecuteStatement
+        - rds-data:BeginTransaction
+        - rds-data:CommitTransaction
+        - rds-data:RollbackTransaction
       Resource:
-        - ${file(../infrastructure/config.json):tenant-management_db_arn)}
+        - ${file(../infrastructure/config.json):tenant-management_db_arn}
 functions:
   create_tenant:
     handler: handler.createTenant

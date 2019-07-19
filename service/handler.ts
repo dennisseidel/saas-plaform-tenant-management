@@ -16,7 +16,7 @@ export const createTenant: APIGatewayProxyHandler = async (event, _context) => {
     }
     const sub = getSub(authorizationHeader)
     const tenantId = v1()
-    const tenant = new Tenant(plan, tenantName, tenantId, sub, 'tenant-admin')
+    const tenant = new Tenant(plan, tenantName, tenantId, sub, 'admin')
     const tenantDb = new TenantDb();
     const res = await tenantDb.createTenant(tenant);
     return httpResponse(200, res);
@@ -36,7 +36,7 @@ export const getTenant: APIGatewayProxyHandler = async (event, _context) => {
   try {
     const sub = getSub(authorizationHeader)
     const tenantDb = new TenantDb()
-    const tenants = await tenantDb.getTenantByUserId(sub)
+    const tenants: Tenant[] = await tenantDb.getTenantByUserId(sub)
     return httpResponse(200, { tenants: tenants })
   }
   catch (error) {
@@ -46,16 +46,14 @@ export const getTenant: APIGatewayProxyHandler = async (event, _context) => {
 }
 
 export const deleteTenant: APIGatewayProxyHandler = async (event, _context) => {
-  const authorizationHeader = event.headers.Authorization;
   const authorized = await authorize(event);
   if (!authorized) {
     return httpResponse(401)
   }
   try {
     const tenantId = event.pathParameters.id
-    const sub = getSub(authorizationHeader)
     const tenantDb = new TenantDb()
-    tenantDb.deleteTenantByTenantId(tenantId, sub)
+    await tenantDb.deleteTenantByTenantId(tenantId)
     return httpResponse(200)
   } catch (error) {
     console.log(error)

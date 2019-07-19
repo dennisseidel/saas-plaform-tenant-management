@@ -1,63 +1,123 @@
-import { DynamoDB } from "aws-sdk";
+import { RDSDataService } from "aws-sdk";
 import { Tenant } from "../domain/tenant";
 
 const config = {
-  tenant_management_db_name: process.env.tenant_management_db_name
+  tenant_management_db_arn: process.env.tenant_management_db_arn,
+  tenant_management_rds_secret_arn: process.env.tenant_management_rds_secret_arn
 };
 
-const dynamoDb = new DynamoDB.DocumentClient();
+const rdsDataService = new RDSDataService();
 
 export class TenantDb {
   createTenant = async (tenant: Tenant) => {
     try {
-      const params = {
-        TableName: config.tenant_management_db_name,
-        Item: {
-          tenantId: tenant.id,
-          tenantName: tenant.name,
-          plan: tenant.plan,
-          userId: tenant.userId,
-          role: tenant.userRole, //"tenant-admin",
-          createdAt: Date.now()
-        }
+      const startTransactionParams = {
+        resourceArn: config.tenant_management_db_arn, /* required */
+        secretArn: config.tenant_management_rds_secret_arn /* required */
+      }
+      const dbTransaction = await rdsDataService.beginTransaction(startTransactionParams).promise();
+      const dbTransactionId = dbTransaction.transactionId
+      const insertNewTenantParams = {
+        includeResultMetadata: true,
+        resourceArn: config.tenant_management_db_arn, /* required */
+        secretArn: config.tenant_management_rds_secret_arn, /* required */
+        sql: `insert into
+        tenant_management.tenants (
+          tenantId,
+          tenantName,
+          plan
+        )
+      values
+        (
+          '${tenant.id}',
+          '${tenant.name}',
+          '${tenant.plan}'  
+        );`, /* required */
+        transactionId: dbTransactionId
       };
-      await dynamoDb.put(params).promise();
-      return params.Item;
+      await rdsDataService.executeStatement(insertNewTenantParams).promise()
+      const insertNewTenantMemberParams = {
+        includeResultMetadata: true,
+        resourceArn: config.tenant_management_db_arn, /* required */
+        secretArn: config.tenant_management_rds_secret_arn, /* required */
+        sql: `insert into
+        tenant_management.tenant_members (
+          tenantId,
+          userId,
+          userRole
+        )
+      values
+        (
+          '${tenant.id}',
+          '${tenant.userId}',
+          '${tenant.userRole}'
+        );`, /* required */
+        transactionId: dbTransactionId
+      }
+      await rdsDataService.executeStatement(insertNewTenantMemberParams).promise()
+      const commitParams = {
+        resourceArn: config.tenant_management_db_arn, /* required */
+        secretArn: config.tenant_management_rds_secret_arn, /* required */
+        transactionId: dbTransactionId /* required */
+      }
+      await rdsDataService.commitTransaction(commitParams).promise();
+      return tenant;
     } catch (error) {
       console.log(error);
       return error;
     }
   };
 
-  getTenantByUserId = async (id: string) => {
+  getTenantByUserId: (id: string) => Promise<Tenant[]> = async (id: string) => {
     try {
-      var params = {
-        TableName: config.tenant_management_db_name,
-        KeyConditionExpression: "userId = :userId",
-        ExpressionAttributeValues: {
-          ":userId": id
-        }
+      var selectParams = {
+        resourceArn: config.tenant_management_db_arn,
+        secretArn: config.tenant_management_rds_secret_arn,
+        sql: `select t.tenantId, t.tenantName, t.plan, tm.userId, tm.userRole from tenant_management.tenants as t join tenant_management.tenant_members as tm on t.tenantId = tenant_management.tm.tenantId where tm.userId = '${id}';`
       }
-      const tenants = await dynamoDb.query(params).promise()
-      return tenants.Items
+      console.log(selectParams)
+      const tenants = await rdsDataService.executeStatement(selectParams).promise();
+      const res: Tenant[] = tenants.records.map(tenant => this.createTenantFromRDSResult(tenant))
+      return res
     } catch (error) {
       console.log(error)
       return error
     }
   }
 
-  deleteTenantByTenantId = async (id: string, userId: string) => {
+  createTenantFromRDSResult: (tenantRDSData: any[]) => Tenant = (tenantRDSData: any[]) => {
+    const tenant = new Tenant(tenantRDSData[2].stringValue, tenantRDSData[1].stringValue, tenantRDSData[0].stringValue, tenantRDSData[3].stringValue, tenantRDSData[4].stringValue)
+    return tenant;
+  }
+
+  deleteTenantByTenantId = async (id: string) => {
     try {
-      var params = {
-        TableName: config.tenant_management_db_name,
-        Key: {
-          "userId": userId,
-          "tenantId": id
-        },
-        ConditionExpression: "role = tenant-admin",
+      let transationParams = {
+        resourceArn: config.tenant_management_db_arn,
+        secretArn: config.tenant_management_rds_secret_arn
       }
-      const res = await dynamoDb.delete(params);
-      return res
+      const dbTransaction = await rdsDataService.beginTransaction(transationParams).promise()
+      const transactionId = dbTransaction.transactionId
+      const deleteTenantMembersParams = {
+        resourceArn: config.tenant_management_db_arn,
+        secretArn: config.tenant_management_rds_secret_arn,
+        transactionId: transactionId,
+        sql: `delete from tenant_management.tenant_members where tenantId='${id}';`
+      }
+      const deleteTenantsParams = {
+        resourceArn: config.tenant_management_db_arn,
+        secretArn: config.tenant_management_rds_secret_arn,
+        transactionId: transactionId,
+        sql: `delete from tenant_management.tenants where tenantId='${id}';`
+      }
+      let [deleteTenantMembersResult, deleteTenantsResult] = await Promise.all([
+        rdsDataService.executeStatement(deleteTenantMembersParams).promise(),
+        rdsDataService.executeStatement(deleteTenantsParams).promise()
+      ])
+      console.log(`Members: ${deleteTenantMembersResult}, Tenants: ${deleteTenantsResult}`)
+      const commitTransationParams = { ...transationParams, transactionId: transactionId }
+      await rdsDataService.commitTransaction(commitTransationParams).promise();
+      return true
     } catch (error) {
       return error
     }
