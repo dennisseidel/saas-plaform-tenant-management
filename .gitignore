@@ -43,3 +43,4 @@ override.tf.json
 
 # config files
 config.json
+*.tfvars

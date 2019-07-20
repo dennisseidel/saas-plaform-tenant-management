@@ -1,0 +1,59 @@
+service:
+  name: tenant-management
+#app: your-app-name
+#tenant: your-tenant-name
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs10.x
+  #logRetentionInDays: 7
+  environment:
+    tenant_management_db_arn: ${file(../infrastructure/config.json):tenant-management_db_arn}
+    tenant_management_rds_secret_arn: ${file(../infrastructure/config.json):tenant-management_rds_secret_arn}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: 
+        - ${file(../infrastructure/config.json):tenant-management_rds_secret_arn}
+    - Effect: Allow
+      Action:
+        - rds-data:ExecuteStatement
+        - rds-data:BatchExecuteStatement
+        - rds-data:BeginTransaction
+        - rds-data:CommitTransaction
+        - rds-data:RollbackTransaction
+      Resource:
+        - ${file(../infrastructure/config.json):tenant-management_db_arn}
+functions:
+  create_tenant:
+    handler: handler.createTenant
+    events:
+      - http:
+          method: post
+          path: tenants
+          cors: true
+  get_tenant:
+    handler: handler.getTenant
+    events:
+      - http:
+          method: get
+          path: tenants
+          cors: true
+  delete_tenant:
+    handler: handler.deleteTenant
+    events:
+      - http:
+          method: delete
+          path: tenants/{id}
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+

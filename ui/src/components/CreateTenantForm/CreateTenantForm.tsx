@@ -3,7 +3,7 @@ import axios from "axios";
 import { Form, Icon, Input, Button, Select } from "antd";
 import { FormComponentProps } from "antd/lib/form";
 
-import { base_url } from "../../config.json";
+import { tenant_management_endpoint } from "../../config.json";
 
 const { Option } = Select;
 
@@ -43,14 +43,14 @@ class CreateTenantForm extends React.Component<
         );
         axios
           .post(
-            `${base_url.value}/tenants`,
+            `${tenant_management_endpoint}/tenants`,
             {
               tenantName: values.tenantname,
               plan: values.producttier
             },
             {
               headers: {
-                //Authorization: `Bearer ${this.props.access_token}`
+                Authorization: `Bearer ${this.props.access_token}`
               }
             }
           )

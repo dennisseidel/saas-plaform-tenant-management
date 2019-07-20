@@ -27,17 +27,21 @@ steps:
     versionSpec: '3.6'
     architecture: 'x64'
 - script: |
-    cd ./scripts && pip install -r requirements.txt && python deploy.py -c service 
-  env:
-      AWS_ACCESS_KEY_ID: $(aws.accesskey)
-      AWS_SECRET_ACCESS_KEY: $(aws.accesssecret)
-  displayName: 'build service'
+    npm install -g serverless
+  displayName: 'install dependancies'
 - script: |
     cd ./scripts && python deploy.py -c infrastructure -ni True
   env:
       AWS_ACCESS_KEY_ID: $(aws.accesskey)
       AWS_SECRET_ACCESS_KEY: $(aws.accesssecret)
   displayName: 'deploy infrastructure'
+- script: |
+    cd ./scripts && pip install -r requirements.txt && python deploy.py -c service 
+  env:
+      AWS_ACCESS_KEY_ID: $(aws.accesskey)
+      AWS_SECRET_ACCESS_KEY: $(aws.accesssecret)
+  displayName: 'build service'
+
 
 - script: |
     cd ui

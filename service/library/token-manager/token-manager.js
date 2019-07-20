@@ -20,7 +20,7 @@ module.exports.getSub = function(req) {
 
 
 //Configure Environment
-const configModule = require('../config-helper/config.js');
+const configModule = require('../config-helper/config.js.js');
 var configuration = configModule.configure(process.env.NODE_ENV);
 
 //Configure Logging
